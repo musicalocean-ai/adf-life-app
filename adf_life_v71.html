@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fasting Coach — ADF LIFE</title>
+  <style>
+    :root{
+      --bg:#000;
+      --panel:#0f0f10;
+      --muted:#bbb;
+      --accent1:#00e6e6;
+      --accent2:#00ff7f;
+      --warm:#ffa500;
+    }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: #ddd;
+      text-align: center;
+      padding: 0;
+      margin: 0;
+      -webkit-font-smoothing:antialiased;
+    }
+    .banner {
+      width: 100%;
+      display:block;
+      object-fit:cover;
+      max-height:240px;
+      width:100%;
+    }
+    header {
+      padding: 1rem;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    }
+    h1 {
+      color: var(--accent1);
+      margin: 0.6rem 0 0.2rem 0;
+      font-size: 1.6rem;
+    }
+    .controls {
+      padding: 1rem;
+      display:flex;
+      gap:.5rem;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    select, button {
+      padding: 0.55rem 0.8rem;
+      margin: 0.25rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #111;
+      color: #eee;
+    }
+    button {
+      background: #101218;
+      color: var(--accent2);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    button:hover { transform: translateY(-1px); }
+    .main {
+      padding: 1rem;
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      gap: 1rem;
+    }
+    .status {
+      max-width: 920px;
+      width: 94%;
+      text-align:left;
+      color: #cfcfcf;
+    }
+    .hour-display {
+      font-size: 1.4rem;
+      color: var(--accent2);
+      margin-bottom: .25rem;
+    }
+    .countdown {
+      font-size: 1rem;
+      color: var(--warm);
+      margin-bottom: .5rem;
+    }
+    .message {
+      font-size: 1.05rem;
+      margin-top: 0.5rem;
+      padding: 1.1rem;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border: 1px solid #2a2a2a;
+      text-align: left;
+      color: #eaeaea;
+      line-height: 1.45;
+      max-width: 920px;
+      width: 94%;
+      box-sizing:border-box;
+    }
+    .tip { color: var(--muted); font-size: .95rem; margin-top:.5rem; display:block; }
+    .progress-container {
+      width: 94%;
+      max-width: 920px;
+      margin: 0.4rem auto;
+      background: #111;
+      border-radius: 20px;
+      height: 24px;
+      overflow: hidden;
+      border: 1px solid #2b2b2b;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff4d4d, #00ff7f, #00e6e6);
+      transition: width 800ms linear;
+    }
+    .progress-text {
+      color: var(--muted);
+      margin-top: .35rem;
+      font-size: 0.95rem;
+    }
+    footer{ padding: .8rem 0 1.4rem 0; color: #888; font-size: .9rem; }
+    @media (max-width:600px){
+      h1{ font-size:1.25rem; }
+      .banner{ max-height:160px; }
+      .message{ font-size:1rem; padding:.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Banner will be full width -->
+  <header>
+    <img class="banner" src="https://i.imgur.com/kWYSDtc.jpeg" alt="ADF Life banner" />
+    <h1>🌞 ADF LIFE 💪 — Fasting Coach</h1>
+  </header>
+
+  <div class="controls">
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <label style="font-size:.85rem;color:#aaa;margin-bottom:.2rem;">Current fast starting point</label>
+      <select id="startHour" title="Select fast start time"></select>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      <label style="font-size:.85rem;color:#aaa;margin-bottom:.2rem;">Fast length</label>
+      <select id="fastLength">
+        <option value="36" selected>36 hours</option>
+        <option value="37">37 hours</option>
+        <option value="38">38 hours</option>
+        <option value="39">39 hours</option>
+        <option value="40">40 hours</option>
+      </select>
+    </div>
+
+    <div style="display:flex;flex-direction:column;align-items:center;">
+      
+      <div style="display:flex;gap:.4rem;">
+        <button id="startBtn">Start Tracking</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="main">
+    <div class="status">
+      <div class="hour-display" id="hourDisplay">Fast hasn’t started yet.</div>
+      <div class="countdown" id="countdown"></div>
+    </div>
+
+    <div class="progress-container" aria-hidden="true">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-text" id="progressText"></div>
+
+    <div class="message" id="message">Upload started — select a start time and press <strong>Start Tracking</strong>.</div>
+  </main>
+
+  <footer>Tip: Stay hydrated and listen to your body.</footer>
+
+<script>
+/*
+  Key behaviours:
+  - messages[1..40] expanded with scientific detail.
+  - Progress computed using half-hour steps: elapsedHalfHours = floor(elapsed_ms / (30*60*1000))
+  - Displayed "currentHour" = floor(elapsedHalfHours / 2) -> messages shown at full hours only.
+  - Progress bar reflects (elapsedHalfHours / (fastLength * 2)) * 100
+  - UI updates frequently (every 15s) to stay responsive.
+*/
+
+// Expanded scientific messages (1..40). Kept concise-ish but with biology detail & short tip.
+const messages = {
+1: `Hour 1 — Initiation: Insulin begins to fall and the body shifts away from constant glucose reliance. Glycogenolysis keeps blood sugar stable while the liver ramps up gluconeogenesis. Early signaling for lipolysis (fat release) begins. 
+TIP: Drink water and sip electrolytes to support early metabolic transitions.`,
+
+2: `Hour 2 — Early metabolic switching: Circulating insulin continues dropping; glucagon rises. Glycogen is still the primary fuel but pathways for fatty acid mobilization are being signaled. Slight increase in alertness and focus is common as catecholamines rise.
+TIP: Short, calm movement (walk/stretch) helps circulation and mood.`,
+
+3: `Hour 3 — Fat mobilization activating: Hormonal signaling (glucagon, epinephrine) promotes lipolysis — triglycerides in adipose tissue break into free fatty acids. The liver prepares to convert some of these substrates into ketone bodies for brain use.
+TIP: Practice diaphragmatic breathing to manage early hunger signals.`,
+
+4: `Hour 4 — Glycogen drawing down: Liver glycogen becomes increasingly utilized. The balance shifts toward greater fat oxidation as carbohydrate availability wanes. Mild increases in free fatty acids are detectable in circulation.
+TIP: Stay hydrated and move gently to ease energy fluctuations.`,
+
+5: `Hour 5 — Early ketosis programming: The liver increases ketogenesis; low levels of ketones begin circulating. Brain and muscle still use a mix of glucose and fatty acids, but the switch toward ketones accelerates.
+TIP: Hydrate with electrolytes to support energy and prevent headaches.`,
+
+6: `Hour 6 — Metabolic adaptation: Insulin has dropped meaningfully; adipose lipolysis is active. Cortisol may be moderately elevated to maintain energy availability — not necessarily bad in this context; it's part of the fasting response.
+TIP: Avoid heavy exertion; light mobility or yoga is ideal.`,
+
+7: `Hour 7 — Cellular maintenance signals: Signaling pathways linked to autophagy start to upregulate; cells begin recycling damaged proteins and organelles in low-nutrient states. This is an early cellular cleanup phase.
+TIP: Brief rest or meditation can support stress reduction and repair.`,
+
+8: `Hour 8 — Fatty acids feeding tissues: Ketones increase modestly; many tissues begin relying more on fatty acids and ketones. Mental clarity often improves as brain fuel diversifies away from glucose.
+TIP: Journal or do focused mental tasks — clarity can be strong now.`,
+
+9: `Hour 9 — Sustained lipolysis: Free fatty acids circulation remains steady, and the liver converts more substrate to ketones. Visceral fat mobilization (the metabolically active fat) starts to become proportionally more available.
+TIP: Light walks or gentle mobility support circulation and comfort.`,
+
+10: `Hour 10 — Hormone shifts: Growth hormone pulses may increase during extended fasting, helping preserve lean mass while promoting lipolysis. Metabolism becomes more efficient at using stored energy.
+TIP: Keep drinking water; replenish electrolytes if you feel botherd.`,
+
+11: `Hour 11 — Autophagy increasing: Cellular degradation/recycling ramps further — selective removal of damaged proteins and organelles helps cellular renewal. This supports metabolic health over time.
+TIP: Practice low-intensity movement and protect sleep rhythms to maximize repair.`,
+
+12: `Hour 12 — Transition toward ketone reliance: The body’s shift from glycogen to fat-derived energy becomes more pronounced. Ketone production (mainly beta-hydroxybutyrate, or BHB) stabilizes and may now be detectable in breath or blood. Many people notice smoother energy levels, heightened focus, and improved mood as brain fuel transitions toward ketones.
+TIP: This is an optimal time for mentally demanding or creative work — your mind may feel unusually clear and steady.`,
+
+13: `Hour 13 — Deepening fat utilization: Lipolysis (fat breakdown) continues at a steady rate, and the liver maintains consistent ketone synthesis to fuel the brain and muscles. With insulin levels staying low, cells begin improving their insulin sensitivity — an early metabolic benefit of fasting.
+TIP: If working at a desk, periodically stand or stretch; maintaining good posture supports circulation and alertness.`,
+
+14: `Hour 14 — Cellular cleanup intensifies: Autophagy ramps up further, allowing cells to recycle damaged proteins, organelles, and waste materials. This process can enhance long-term cellular function and reduce inflammation. Some people experience a sense of lightness or calm as the body enters this maintenance phase.
+TIP: Incorporate a brief mobility or stretching routine to boost blood flow and reduce stiffness from inactivity.`,
+
+15: `Hour 15 — mTOR downregulation and repair focus: With minimal nutrient signaling, the mTOR pathway (mammalian target of rapamycin) is downregulated. This shift suppresses growth signals and promotes cellular repair and longevity processes, synergizing with autophagy.
+TIP: Engage in gentle breathing exercises, meditation, or slow movement — they complement the body’s restorative internal state.`,
+
+16: `Hour 16 — Consolidated ketone supply: Ketone levels continue to rise steadily, becoming the primary energy source for the brain and muscles. Fatty acid metabolism is now highly efficient, and glucose dependence decreases significantly. Many fasters report steady, even energy with reduced hunger.
+TIP: Ideal time for low-intensity activity such as a walk, mobility work, journaling, or reading — calm focus thrives here.`,
+
+17: `Hour 17 — Visceral fat mobilization grows: As glycogen remains depleted, fat from deeper visceral stores becomes increasingly accessible. The body efficiently breaks down triglycerides into free fatty acids, which the liver converts into ketones for systemic energy. This stage often marks a visible shift in metabolism toward deep fat utilization.
+TIP: Stay mindful — hunger may rise briefly as hormones fluctuate; hydrate well and maintain electrolyte balance to support stability.`,
+
+18: `Hour 18 — Neurochemistry shifts: The nervous system adapts to the fasting state through increased norepinephrine and dopamine activity, heightening alertness and motivation. Brain-derived neurotrophic factor (BDNF) begins to rise, promoting neuronal repair, growth, and plasticity — mechanisms linked to sharper thinking and resilience.
+TIP: Take advantage of mental clarity — it’s a great window for focused study, reading, or creative problem-solving.`,
+
+19: `Hour 19 — Ketone-driven cognition: With ketones now a stable and preferred energy source for the brain, many people report enhanced concentration, steady energy, and reduced mental fog. The brain’s energy supply is smooth and efficient, with fewer glucose fluctuations affecting mood or focus.
+TIP: Use this period for light cognitive work, journaling, or reflective thinking — activities that align well with the brain’s calm alertness.`,
+
+20: `Hour 20 — Robust autophagy & hormonal balance: Autophagy continues at a high rate, clearing damaged cell components and improving metabolic efficiency. Growth hormone (GH) secretion occurs in pulses, preserving lean tissue and aiding recovery. Insulin sensitivity remains strong, and inflammation may begin to decrease measurably.
+TIP: Gentle stretching, yoga, or mobility work enhance circulation and comfort while supporting ongoing detoxification and repair.`,
+
+21: `Hour 21 — Peak fat oxidation window begins: Many fasters reach a metabolic sweet spot here, with fat oxidation and ketone utilization at their most efficient. Hormonal rhythms are stable, and systemic inflammation markers tend to decline. Some experience a profound sense of calm or flow during this equilibrium phase.
+TIP: Try guided breathing, meditation, or mindful walking to deepen relaxation and reinforce focus — the body and mind are in sync now.`,
+
+
+22: `Hour 22 — Stem-cell signaling increases: Research in both animals and humans suggests that prolonged fasting promotes regenerative signaling pathways, including those associated with stem-cell activation and tissue repair. This stage supports renewal in the immune system, gut lining, and musculoskeletal tissues, preparing the body for rejuvenation upon refeeding.
+TIP: Keep stress low and posture upright — calm breathing and relaxed movement support the body’s repair environment.`,
+
+23: `Hour 23 — Neuroplasticity signals: Elevated BDNF and related growth factors create a favorable internal state for learning and memory consolidation. Neurons are more responsive to stimulation, and synaptic efficiency can improve. This neuroplastic window may enhance creativity, focus, and emotional balance.
+TIP: Engage your mind — puzzles, journaling, or learning something new can make use of this heightened brain adaptability.`,
+
+24: `Hour 24 — 24-hour inflection point: Reaching the full-day mark signals a major metabolic and hormonal milestone. Growth hormone levels may be several times baseline, supporting fat metabolism and tissue preservation. Deep ketosis is now well-established, and autophagy continues robustly. The body’s internal chemistry has shifted into a full restorative mode.
+TIP: Stay hydrated and move gently; consider reflection or gratitude practice to mark the discipline and clarity of this point.`,
+
+25: `Hour 25 — Deep cellular renewal: Autophagy and proteostasis processes are in full swing, recycling damaged proteins, mitochondria, and other cellular debris to provide the raw materials for healthier regeneration. The body is efficiently clearing metabolic waste, supporting long-term vitality and resilience.
+TIP: Keep activity light — a mobility flow, stretching, or an easy walk promotes circulation without disrupting the repair state.`,
+
+
+26: `Hour 26 — Regenerative signaling continues: The body remains in a heightened repair state, with continued activation of genes and pathways linked to regeneration, including stem-cell–related markers and antioxidant responses. Cellular cleanup and immune recalibration persist at a steady pace, supporting long-term tissue health.
+TIP: Prioritize calm and recovery — gentle stretching or slow breathing helps maintain circulation while reinforcing the body’s restorative rhythm.`,
+
+27: `Hour 27 — Efficient mitochondrial function: Prolonged fasting encourages mitochondrial biogenesis — the creation of new, efficient energy-producing organelles — while reducing oxidative stress. Cells become better at managing energy and resisting metabolic fatigue, enhancing endurance and vitality.
+TIP: Take short walks or light mobility breaks to keep blood flowing and joints comfortable without overexertion.`,
+
+28: `Hour 28 — Cognitive protection increases: Sustained ketone availability continues to fuel neurons efficiently, reducing oxidative damage and supporting long-term brain health. Ketones act as a clean-burning energy source and may enhance mood stability and mental endurance.
+TIP: Choose calm, restorative activities such as meditation, journaling, or quiet reading — they align perfectly with this balanced brain state.`,
+
+29: `Hour 29 — Deep ketosis and metabolic resilience: Blood ketone concentrations are typically elevated and stable, providing powerful fuel for the brain, heart, and muscles. Inflammation may further decline, and cellular energy systems function with remarkable efficiency. Many report a deep sense of calm and sustained focus here.
+TIP: Continue mindful hydration and electrolyte intake; gentle, purposeful movement like stretching or walking complements this deep metabolic phase.`,
+
+
+30: `Hour 30 — Lower inflammation, higher efficiency: Prolonged fasting continues to reduce pro-inflammatory cytokines, supporting lower systemic inflammation and improved metabolic efficiency. The body runs smoothly on stored energy, with stable blood sugar and ketone levels maintaining consistent energy output.
+TIP: Prioritize hydration and take brief micro-breaks for movement or stretching to stay comfortable and prevent stiffness.`,
+
+31: `Hour 31 — Peak autophagy and tissue repair: Cellular cleanup and repair mechanisms are at their strongest, targeting old or malfunctioning cell components for renewal. Mitochondrial function and protein recycling are active, allowing tissues to undergo meaningful restorative maintenance.
+TIP: Engage in relaxation or gentle restorative practices — meditation, yoga, or calm breathing enhance recovery and support adaptive repair.`,
+
+32: `Hour 32 — Visceral adipose accessibility: Deeper metabolic fat stores become increasingly mobilized as fasting persists. Sustained lipolysis draws energy from visceral adipose tissue — the metabolically active fat surrounding organs — contributing to improved metabolic flexibility and reduced inflammation.
+TIP: Gentle walking or stretching helps maintain blood flow; keep posture mindful and stay hydrated for optimal fat metabolism.`,
+
+33: `Hour 33 — Immune renewal signals: Extended fasting can promote immune cell turnover, clearing out old or dysfunctional white blood cells and stimulating new progenitor cell activity upon refeeding. This “reset” effect supports a more balanced and efficient immune response.
+TIP: Prioritize deep rest and minimize stress; slow breathing or mindfulness activates the parasympathetic system, reinforcing immune regeneration.`,
+
+
+34: `Hour 34 — Sustained metabolic clarity: Ketone supply and fat oxidation remain steady, providing balanced energy and calm focus. The body’s hormonal environment supports continued repair and anti-inflammatory signaling while preserving lean tissue.
+TIP: Stay mindful of hydration; light stretching or outdoor walking can enhance circulation and mental clarity.`,
+
+35: `Hour 35 — Deep restorative phase: The body is fully adapted to fasting fuel sources, and regenerative pathways remain active. Cellular cleanup, hormonal balance, and mitochondrial renewal continue to reinforce long-term resilience and metabolic health.
+TIP: Keep energy expenditure low and relaxation high — slow breathing or a quiet environment supports the body’s deep restoration.`,
+
+36: `Hour 36 — 🎉 Congratulations! You’ve completed a 36-hour fast — a major accomplishment for both body and mind. Over the past day and a half, your metabolism has shifted from glucose dependence to fat and ketone utilization, supporting steady energy and mental clarity. Deep autophagy has been active, clearing out damaged cell components and promoting renewal at the mitochondrial level. Inflammation and oxidative stress have likely decreased, while insulin sensitivity, hormonal balance, and metabolic efficiency have improved. Growth hormone levels have supported muscle preservation and cellular repair, and your immune system has undergone beneficial recalibration.  Now your body is in an exceptionally receptive state for nourishment and rebuilding. Break your fast gently — begin with water or electrolytes, then introduce small, easily digestible, nutrient-dense foods such as fruit, soup, soft vegetables, or lean protein. Eat slowly and mindfully to reawaken digestion. You’ve given your system a powerful reset: improved metabolic flexibility, potential immune renewal, clearer thinking, and long-term cellular health. Hydrate well, rest, and take note of how balanced and light you feel — these signals are your body’s gratitude for your effort and patience. 💧✨
+TIP: Break the fast gently with easily digestible whole foods — think hydration first, then nutrient-dense, moderate portions to ease digestion.`,
+
+
+37: `Hour 37 — Bonus hour! More stubborn store mobilization: The body continues drawing from long-term energy reserves, tapping into resistant adipose deposits as fuel. Lipolysis remains efficient, and overall metabolic rhythm is stable. These final fasting hours often reflect deep fat mobilization and lasting metabolic flexibility.
+TIP: Keep hydration consistent and integrate gentle movement or stretching to support circulation and electrolyte balance.`,
+
+38: `Hour 38 — A second bonus hour in your rejuvenation window! Repair and DNA maintenance pathways remain highly active, while oxidative stress continues to decline. The body is in a rejuvenated internal state, ready to rebuild and regenerate when nutrients return. This phase sets the stage for improved tissue health upon refeeding.
+TIP: Begin preparing for reintroduction of food — choose gentle, nutrient-dense, and easily digestible options like broths, soft vegetables, or light proteins.`,
+
+39: `Hour 39 — On fire! A third bonus hour with peak metabolic efficiency: Mitochondria operate at high efficiency, fueled by stable ketone levels and low inflammation. Cognitive function and energy remain steady, as the body functions optimally on stored fuel. This stage often feels clear, calm, and balanced.
+TIP: Take time to slow down and plan your refeeding — reintroduce food mindfully to avoid overwhelming the digestive system.`,
+
+40: `Hour 40 — 🎉 Amazing work — you’ve gone beyond the 36-hour mark and reached a full 40-hour fast! This extra stretch deepens nearly every process your body began earlier: fat oxidation continues at peak efficiency, and glycogen stores are now almost completely depleted, prompting your body to rely even more on stored fat for energy. Autophagy — your body’s cellular “cleanup” and repair mode — intensifies, breaking down old proteins and dysfunctional cells while supporting regeneration and longevity. Growth hormone levels remain elevated, protecting lean muscle and enhancing recovery once you refeed. Inflammation markers continue to drop, insulin sensitivity improves further, and mental clarity often sharpens as ketones fuel your brain. That additional 4 hours amplifies the metabolic reset, cellular rejuvenation, and sense of mastery over appetite and comfort — a powerful reminder of your discipline and the body’s remarkable adaptability.👏 Completion & transition: Reaching the 40-hour mark signifies deep physiological adaptation — optimized fat oxidation, robust autophagy, balanced hormones, and enhanced insulin sensitivity. The body is now highly receptive to nutrient signaling, making refeeding a vital opportunity for growth and recovery. 
+
+TIP: Break your fast gently with hydration first, then small portions of easily digestible, whole foods. Eat slowly, allowing the body to readjust gracefully.`,
+};
+
+// Populate start hour dropdown with recent times (past 0..39 hours)
+const startHourSelect = document.getElementById('startHour');
+(function populateStartOptions(){
+  const now = new Date();
+  // Offer a selection of times in the past 39 hours using local time labels
+  for(let i=0;i<=40;i++){
+    const d = new Date(now.getTime() - i*60*60*1000);
+    const label = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
+      ? d.getHours().toString().padStart(2,'0') + ":00"
+      : (d.getMonth()+1).toString().padStart(2,'0') + "/" + d.getDate().toString().padStart(2,'0') + " " + d.getHours().toString().padStart(2,'0') + ":00";
+    const opt = document.createElement('option');
+    opt.value = d.toISOString();
+    opt.textContent = label;
+    startHourSelect.appendChild(opt);
+  }
+})();
+
+let fastStart = null;
+let fastLength = 36;         // hours
+let updateTimerId = null;
+
+// DOM elements
+const hourDisplayEl = document.getElementById('hourDisplay');
+const countdownEl = document.getElementById('countdown');
+const progressBarEl = document.getElementById('progressBar');
+const progressTextEl = document.getElementById('progressText');
+const messageEl = document.getElementById('message');
+
+document.getElementById('startBtn').addEventListener('click', startTracking);
+document.getElementById('resetBtn').addEventListener('click', resetTracking);
+document.getElementById('fastLength').addEventListener('change', (e)=>{ fastLength = parseInt(e.target.value); updateDisplay(); });
+
+function startTracking(){
+  if (!startHourSelect.value) {
+    alert('Please choose a start time.');
+    return;
+  }
+  fastStart = new Date(startHourSelect.value);
+  fastLength = parseInt(document.getElementById('fastLength').value);
+  if (updateTimerId) clearInterval(updateTimerId);
+  updateDisplay();               // immediate update
+  // update frequently so the progress bar looks smooth and reacts to time
+  updateTimerId = setInterval(updateDisplay, 15000); // every 15s
+  document.getElementById('startBtn').textContent = 'Tracking...';
+}
+
+function resetTracking(){
+  if (updateTimerId) clearInterval(updateTimerId);
+  fastStart = null;
+  document.getElementById('startBtn').textContent = 'Start Tracking';
+  hourDisplayEl.textContent = "Fast hasn’t started yet.";
+  countdownEl.textContent = "";
+  progressBarEl.style.width = "0%";
+  progressTextEl.textContent = "";
+  messageEl.textContent = "Upload started — select a start time and press Start Tracking.";
+}
+
+function updateDisplay(){
+  if (!fastStart) return;
+  const now = new Date();
+  const msElapsed = now - fastStart;
+  const halfHourMs = 30*60*1000;
+  // number of completed half-hour increments since start (0,1,2,...)
+  const elapsedHalfHours = Math.max(0, Math.floor(msElapsed / halfHourMs));
+  // current message hour displayed at full integer hour (0..fastLength)
+  let currentHour = Math.floor(elapsedHalfHours / 2);
+  if (currentHour > fastLength) currentHour = fastLength;
+
+  // hours remaining (integer)
+  const hoursRemaining = Math.max(0, fastLength - currentHour);
+
+  // progress percent based on half-hour steps
+  const totalHalfHours = fastLength * 2;
+  let progressFraction = elapsedHalfHours / totalHalfHours;
+  if (progressFraction < 0) progressFraction = 0;
+  if (progressFraction > 1) progressFraction = 1;
+  const progressPercent = progressFraction * 100;
+
+  // update UI
+  hourDisplayEl.textContent = currentHour <= 0 ? "Fast hasn’t started yet." : `Hour ${currentHour} of your fast`;
+  countdownEl.textContent = currentHour <= 0 ? "" : `${hoursRemaining} hours remaining`;
+  progressBarEl.style.width = progressPercent.toFixed(2) + "%";
+  progressTextEl.textContent = currentHour <= 0 ? "" : `${progressPercent.toFixed(1)}% complete`;
+
+  // message selection — only full-hour messages
+  let msg = messages[currentHour];
+  if (!msg) {
+    if (currentHour >= fastLength) {
+       msg = "🎉 Congratulations! You’ve completed your 36-hour fast — a major accomplishment for both body and mind. Over the past day and a half, your metabolism has shifted from glucose dependence to fat and ketone utilization, supporting steady energy and mental clarity. Deep autophagy has been active, clearing out damaged cell components and promoting renewal at the mitochondrial level. Inflammation and oxidative stress have likely decreased, while insulin sensitivity, hormonal balance, and metabolic efficiency have improved. Growth hormone levels have supported muscle preservation and cellular repair, and your immune system has undergone beneficial recalibration.  Now your body is in an exceptionally receptive state for nourishment and rebuilding. Break your fast gently — begin with water or electrolytes, then introduce small, easily digestible, nutrient-dense foods such as fruit, soup, soft vegetables, or lean protein. Eat slowly and mindfully to reawaken digestion. You’ve given your system a powerful reset: improved metabolic flexibility, potential immune renewal, clearer thinking, and long-term cellular health. Hydrate well, rest, and take note of how balanced and light you feel — these signals are your body’s gratitude for your effort and patience. 💧✨";
+    } else {
+      // fallback message between hours
+      msg = "Stay strong — your body is adapting and doing important cellular work. Hydration and electrolytes help a lot during this phase.";
+    }
+  }
+
+  // show message with preserved line breaks
+  messageEl.innerHTML = msg.replace(/\n/g, '<br>');
+}
+
+// If user opens file and wants to quickly preview: default start = now (0 elapsed).
+// No autostart to avoid accidental tracking. But we can preselect the top option (now)
+(function defaultSelection(){
+  if (startHourSelect.options.length > 0) startHourSelect.selectedIndex = 0;
+})();
+
+</script>
+</body>
+</html>
