@@ -146,9 +146,10 @@
       <label style="font-size:.85rem;color:#aaa;margin-bottom:.2rem;">Fast length</label>
       <select id="fastLength">
         <option value="36" selected>36 hours</option>
+        <option value="37">37 hours</option>
         <option value="38">38 hours</option>
+        <option value="39">39 hours</option>
         <option value="40">40 hours</option>
-        <option value="48">48 hours</option>
       </select>
     </div>
 
@@ -175,19 +176,9 @@
     <div class="message" id="message">Upload started — select a start time and press <strong>Start Tracking</strong>.</div>
   </main>
 
-  <footer>Always stay hydrated and listen to your body!</footer>
+  <footer>Tip: Stay hydrated and listen to your body.</footer>
 
 <script>
-/*
-  Key behaviours:
-  - messages[1..40] expanded with scientific detail.
-  - Progress computed using half-hour steps: elapsedHalfHours = floor(elapsed_ms / (30*60*1000))
-  - Displayed "currentHour" = floor(elapsedHalfHours / 2) -> messages shown at full hours only.
-  - Progress bar reflects (elapsedHalfHours / (fastLength * 2)) * 100
-  - UI updates frequently (every 15s) to stay responsive.
-*/
-
-// Expanded scientific messages (1..40). Kept concise-ish but with biology detail & short tip.
 const messages = {
 1: `Hour 1 — Initiation: Insulin begins to fall and the body shifts away from constant glucose reliance. Glycogenolysis keeps blood sugar stable while the liver ramps up gluconeogenesis. Early signaling for lipolysis (fat release) begins. 
 TIP: Drink water and sip electrolytes to support early metabolic transitions.`,
@@ -340,23 +331,22 @@ Tip: Visualization can be powerful here — imagine each cell being renewed and 
 Stay hydrated, refeed gently, and let the glow of this renewal carry you forward.`,
 };
 
-// Populate start hour dropdown with recent times (past 0..49 hours) 
-  const startHourSelect = document.getElementById('startHour'); (function populateStartOptions(){ const now = new Date(); 
-// Offer a selection of times in the past 49 hours using local time labels 
-  for(let i=0;i<=49;i++){ 
-    const d = new Date(now.getTime() - i*60*60*1000); 
+// Populate start hour dropdown with recent times (past 0..39 hours)
+const startHourSelect = document.getElementById('startHour');
+(function populateStartOptions(){
+  const now = new Date();
+  // Offer a selection of times in the past 39 hours using local time labels
+  for(let i=0;i<=40;i++){
+    const d = new Date(now.getTime() - i*60*60*1000);
     const label = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
       ? d.getHours().toString().padStart(2,'0') + ":00"
-      : (d.getMonth()+1).toString().padStart(2,'0') + "/" + 
-      d.getDate().toString().padStart(2,'0') + " " +
-      d.getHours().toString().padStart(2,'0') + ":00";
-    const opt = document.createElement('option'); 
-    opt.value = d.toISOString(); 
-    opt.textContent = label; 
+      : (d.getMonth()+1).toString().padStart(2,'0') + "/" + d.getDate().toString().padStart(2,'0') + " " + d.getHours().toString().padStart(2,'0') + ":00";
+    const opt = document.createElement('option');
+    opt.value = d.toISOString();
+    opt.textContent = label;
     startHourSelect.appendChild(opt);
-  } })();
-  
-
+  }
+})();
 
 let fastStart = null;
 let fastLength = 36;         // hours
@@ -412,7 +402,12 @@ function updateDisplay(){
   // hours remaining (integer)
   const hoursRemaining = Math.max(0, fastLength - currentHour);
 
-
+  // progress percent based on half-hour steps
+  const totalHalfHours = fastLength * 2;
+  let progressFraction = elapsedHalfHours / totalHalfHours;
+  if (progressFraction < 0) progressFraction = 0;
+  if (progressFraction > 1) progressFraction = 1;
+  const progressPercent = progressFraction * 100;
 
   // update UI
   hourDisplayEl.textContent = currentHour <= 0 ? "Fast hasn’t started yet." : `Hour ${currentHour} of your fast`;
