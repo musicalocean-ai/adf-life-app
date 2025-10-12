@@ -148,8 +148,8 @@
         <option value="36" selected>36 hours</option>
         <option value="37">37 hours</option>
         <option value="38">38 hours</option>
-        <option value="39">39 hours</option>
         <option value="40">40 hours</option>
+        <option value="48">48 hours</option>
       </select>
     </div>
 
@@ -336,7 +336,7 @@ const startHourSelect = document.getElementById('startHour');
 (function populateStartOptions(){
   const now = new Date();
   // Offer a selection of times in the past 39 hours using local time labels
-  for(let i=0;i<=40;i++){
+  for(let i=0;i<=49;i++){
     const d = new Date(now.getTime() - i*60*60*1000);
     const label = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
       ? d.getHours().toString().padStart(2,'0') + ":00"
