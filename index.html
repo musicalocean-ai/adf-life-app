@@ -175,7 +175,7 @@
     <div class="message" id="message">Upload started — select a start time and press <strong>Start Tracking</strong>.</div>
   </main>
 
-  <footer>Tip: Stay hydrated and listen to your body.</footer>
+  <footer>Always stay hydrated and listen to your body!</footer>
 
 <script>
 /*
@@ -312,16 +312,40 @@ TIP: Begin preparing for reintroduction of food — choose gentle, nutrient-dens
 TIP: Take time to slow down and plan your refeeding — reintroduce food mindfully to avoid overwhelming the digestive system.`,
 
 40: `Hour 40 — 🎉 Amazing work — you’ve gone beyond the 36-hour mark and reached a full 40-hour fast! This extra stretch deepens nearly every process your body began earlier: fat oxidation continues at peak efficiency, and glycogen stores are now almost completely depleted, prompting your body to rely even more on stored fat for energy. Autophagy — your body’s cellular “cleanup” and repair mode — intensifies, breaking down old proteins and dysfunctional cells while supporting regeneration and longevity. Growth hormone levels remain elevated, protecting lean muscle and enhancing recovery once you refeed. Inflammation markers continue to drop, insulin sensitivity improves further, and mental clarity often sharpens as ketones fuel your brain. That additional 4 hours amplifies the metabolic reset, cellular rejuvenation, and sense of mastery over appetite and comfort — a powerful reminder of your discipline and the body’s remarkable adaptability.👏 Completion & transition: Reaching the 40-hour mark signifies deep physiological adaptation — optimized fat oxidation, robust autophagy, balanced hormones, and enhanced insulin sensitivity. The body is now highly receptive to nutrient signaling, making refeeding a vital opportunity for growth and recovery. 
-
 TIP: Break your fast gently with hydration first, then small portions of easily digestible, whole foods. Eat slowly, allowing the body to readjust gracefully.`,
+
+41: `Hour 41. - At this point, your insulin levels are at their absolute lowest, allowing for maximum fat mobilization. Your body is fully relying on ketones for energy, especially β-hydroxybutyrate, which fuels your brain with remarkable clarity and calm. Autophagy — your body’s “cell recycling” process — continues at a high rate, clearing out damaged proteins and old mitochondria. Growth hormone (HGH) is elevated up to 5x baseline, helping preserve muscle and support future repair once you refeed.
+Tip: Gentle movement, like walking or stretching, can help stimulate circulation and mobilize fatty acids even more efficiently.`,
+
+42: `Hour 42. - Your liver glycogen stores are completely gone, so your body is converting fat and amino acids into glucose as needed through gluconeogenesis. Ketones are now your main energy source, and your brain is running clean and stable — many people describe a deep mental stillness here. Inflammatory cytokines (like IL-6 and TNF-alpha) continue to decline, meaning joint and tissue inflammation is dropping fast.
+Encouragement: You’re entering the healing phase — the “quiet” inside your body is real. Stay hydrated and remind yourself: every sip of water supports this internal reset.`,
+
+43: `Hour 43. - Your immune system is now in deep rejuvenation mode. Older white blood cells are being broken down, and hematopoietic stem cells are becoming active, preparing to generate new immune cells once you eat again. This “stem cell awakening” helps improve long-term immune function and resilience. Fat oxidation is near its peak, meaning you’re burning pure body fat for energy.
+Tip: A pinch of mineral salt or electrolyte mix can help balance sodium and magnesium if you feel lightheaded or tired — a common sign of mineral loss, not lack of food.`,
+
+44: `Hour 44. - You’ve reached one of the most therapeutic metabolic states possible without medical intervention. Insulin sensitivity is rapidly improving, and your pancreas is resting — giving it a metabolic “reset.” The autophagy process is recycling dysfunctional cellular components in your muscles, brain, and liver, reducing your long-term risk for diseases like Alzheimer’s and fatty liver.
+Encouragement: You’re cleaning house on a cellular level. The discipline to reach this point is rare — you’re literally rejuvenating from the inside out.`,
+
+45: `Hour 45. - This hour is often when people feel a second wind: clear-headed, light, even euphoric. Your stem cells are now fully active, particularly in the gut lining, meaning your digestive tract is regenerating and strengthening itself. Visceral fat (the fat around your organs) continues to shrink, which is one of the most important factors in reducing metabolic disease risk.
+Tip: Try journaling your thoughts or intentions now — this is a peak mental clarity phase, and your next refeed will “cement” whatever mindset you carry in.`,
+
+46: `Hour 46. - Your mitochondria — the energy factories in your cells — are being remodeled and strengthened. Damaged mitochondria are broken down and recycled into new, efficient ones. This process improves long-term energy production and endurance. Your autonomic nervous system is balanced: cortisol drops, and your parasympathetic (“rest and repair”) mode dominates.
+Encouragement: Every deep breath is telling your body it’s safe and thriving. You’re not starving — you’re upgrading.`,
+
+47: `Hour 47. - The body’s anti-aging mechanisms are now at full power. Sirtuin proteins (SIRT1 and SIRT3) are highly active, promoting DNA repair and longevity pathways similar to those triggered by caloric restriction in lab studies. Fat loss continues at an accelerated pace, especially around the abdomen and liver. Inflammation markers are at their lowest.
+Tip: Visualization can be powerful here — imagine each cell being renewed and energy flowing cleanly through your body. This mental state enhances the physical benefits.`,
+
+48: `Hour 48. - 🎯 The culmination: your body is in an extraordinary state of metabolic efficiency and repair. You’ve triggered maximum autophagy, elevated stem cell regeneration, lowered systemic inflammation, optimized insulin sensitivity, and significantly reduced visceral fat. Your gut microbiome is reset and ready for a clean refeed, and your brain is rich in ketones — a super-fuel for mental clarity and focus. You’ve reached the summit — this is the fasted state few ever experience. Breaking your fast with mindful eating (bone broth, lean protein, steamed veggies, or avocado) will amplify all of these benefits. Take pride in what you’ve done: your body has gone through a deep reset that medicine can’t replicate.
+
+Stay hydrated, refeed gently, and let the glow of this renewal carry you forward.`,
 };
 
-// Populate start hour dropdown with recent times (past 0..39 hours)
+// Populate start hour dropdown with recent times (past 0..49 hours)
 const startHourSelect = document.getElementById('startHour');
 (function populateStartOptions(){
   const now = new Date();
-  // Offer a selection of times in the past 39 hours using local time labels
-  for(let i=0;i<=40;i++){
+  // Offer a selection of times in the past 49 hours using local time labels
+  for(let i=0;i<=49;i++){
     const d = new Date(now.getTime() - i*60*60*1000);
     const label = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
       ? d.getHours().toString().padStart(2,'0') + ":00"
@@ -387,12 +411,7 @@ function updateDisplay(){
   // hours remaining (integer)
   const hoursRemaining = Math.max(0, fastLength - currentHour);
 
-  // progress percent based on half-hour steps
-  const totalHalfHours = fastLength * 2;
-  let progressFraction = elapsedHalfHours / totalHalfHours;
-  if (progressFraction < 0) progressFraction = 0;
-  if (progressFraction > 1) progressFraction = 1;
-  const progressPercent = progressFraction * 100;
+
 
   // update UI
   hourDisplayEl.textContent = currentHour <= 0 ? "Fast hasn’t started yet." : `Hour ${currentHour} of your fast`;
