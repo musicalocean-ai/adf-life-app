@@ -336,7 +336,7 @@ const startHourSelect = document.getElementById('startHour');
 (function populateStartOptions(){
   const now = new Date();
   // Offer a selection of times in the past 48 hours using local time labels
-  for(let i=0;i<=48;i++){
+  for(let i=1;i<=48;i++){
     const d = new Date(now.getTime() - i*60*60*1000);
     const label = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate()
       ? d.getHours().toString().padStart(2,'0') + ":00"
