@@ -148,8 +148,8 @@
         <option value="36" selected>36 hours</option>
         <option value="37">37 hours</option>
         <option value="38">38 hours</option>
-        <option value="39">39 hours</option>
         <option value="40">40 hours</option>
+        <option value="48">48 hours</option>
       </select>
     </div>
 
@@ -392,10 +392,6 @@ function updateDisplay(){
   if (!fastStart) return;
   const now = new Date();
   const msElapsed = now - fastStart;
-  const halfHourMs = 30*60*1000;
-  // number of completed half-hour increments since start (0,1,2,...)
-  const elapsedHalfHours = Math.max(0, Math.floor(msElapsed / halfHourMs));
-  // current message hour displayed at full integer hour (0..fastLength)
   let currentHour = Math.floor(elapsedHalfHours / 2);
   if (currentHour > fastLength) currentHour = fastLength;
 
